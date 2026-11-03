@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>HızlıKitapOku — Ücretsiz Hızlı Kitap Okuma Uygulaması</title>
+%%HEAD_EXTRA%%
+%%PDFJS_TAG%%
+<link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,700;1,400&family=EB+Garamond:ital,wght@0,400;0,700;1,400&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<style>
+%%CSS%%
+%%EXTRACSS%%
+</style>
+</head>
+<body>
+
+<!-- LANDING PAGE -->
+<div id="landing" class="hidden">
+  <div class="lnd-hero">
+    <span class="lnd-flag-left">🇹🇷</span>
+    <div class="lnd-ataturk-corner">
+      <div class="lnd-ataturk-top">
+        <div class="lnd-ataturk-img-wrap">
+          <img class="lnd-ataturk-img" src="%%ATATURK%%" alt="Mustafa Kemal Atatürk">
+        </div>
+      </div>
+      <div class="lnd-ataturk-izin">Atam İzindeyiz...</div>
+    </div>
+    <h1 class="lnd-logo-big">hızlıkitap<span>oku</span></h1>
+    <p class="lnd-tagline">Her gün biraz oku. RSVP, Harf Harf, Bionic, Scroll, Kartlar ve Normal modlarıyla ücretsiz hızlı okuma — 100'e yakın telifsiz kitap hazır, kendi PDF'ini de ekleyebilirsin.</p>
+  </div>
+
+  <div class="lnd-body">
+
+    <div id="install-card" class="install-card" style="display:none">
+      <div class="ic-main"><b>📲 Uygulama olarak yükle</b><span id="install-txt">Ana ekrana ekle — tam ekran açılsın, internetsiz de çalışsın.</span></div>
+      <button class="lib-tool-btn" id="install-btn" onclick="doInstall()">Yükle</button>
+      <button class="sp-close" onclick="dismissInstall()" title="Kapat">×</button>
+    </div>
+
+    <!-- BUGÜN -->
+    <div class="lnd-sec">
+      <div class="lnd-sec-title">Bugün</div>
+      <div class="today-card">
+        <div class="today-ring-wrap">
+          <svg viewBox="0 0 118 118"><circle cx="59" cy="59" r="50" stroke="var(--surface2)"/><circle id="lnd-ring" cx="59" cy="59" r="50" stroke="var(--accent)" stroke-linecap="round" stroke-dasharray="314.16" stroke-dashoffset="314.16" style="transition:stroke-dashoffset .8s"/></svg>
+          <div class="today-ring-txt"><b id="lnd-today-min">0</b><span id="lnd-today-goal">/ 15 dk</span></div>
+        </div>
+        <div class="today-right">
+          <div class="today-row">
+            <div class="today-pill"><b id="lnd-streak">0 gün</b>🔥 seri</div>
+            <div class="today-pill"><b id="lnd-best">0 gün</b>en uzun seri</div>
+            <div class="today-pill"><b id="lnd-week-min">0 dk</b>bu hafta</div>
+            <div class="today-pill"><b id="lnd-today-words">0</b>bugün kelime</div>
+          </div>
+          <div class="week-bars" id="lnd-week"></div>
+          <div class="goal-inline">
+            Günlük hedef:
+            <div class="chip-row" id="lnd-goal-chips"></div>
+          </div>
+          <div class="heat" id="lnd-heat" title="Son 18 hafta"></div>
+        </div>
+      </div>
+      <div id="lnd-continue"></div>
+    </div>
+
+    <!-- OKUMA MODU -->
+    <div class="lnd-sec">
+      <div class="lnd-sec-title">Okuma Modu</div>
+      <div class="lnd-mode-row" id="lnd-mode-row">
+        <button class="lnd-mode-pill active" data-mode="rsvp" onclick="lndSetMode('rsvp')">RSVP</button>
+        <button class="lnd-mode-pill" data-mode="typewriter" onclick="lndSetMode('typewriter')">Harf Harf</button>
+        <button class="lnd-mode-pill" data-mode="bionic" onclick="lndSetMode('bionic')">Bionic</button>
+        <button class="lnd-mode-pill" data-mode="scroll" onclick="lndSetMode('scroll')">Scroll</button>
+        <button class="lnd-mode-pill" data-mode="tiktok" onclick="lndSetMode('tiktok')">Kartlar</button>
+        <button class="lnd-mode-pill" data-mode="normal" onclick="lndSetMode('normal')">Normal</button>
+      </div>
+    </div>
+
+    <!-- KAYNAK -->
+    <div class="lnd-sec">
+      <div class="lnd-sec-title">Kaynak</div>
+      <div class="lnd-src-card">
+        <div class="lnd-src-tabs">
+          <button class="lnd-src-tab active" onclick="lndSetSrc('text')">📝 Metin</button>
+          <button class="lnd-src-tab" onclick="lndSetSrc('url')">🔗 URL</button>
+          <button class="lnd-src-tab" onclick="lndSetSrc('pdf')">📄 PDF</button>
+        </div>
+        <div id="lnd-panel-text">
+          <textarea id="lnd-text" placeholder="Okumak istediğin metni buraya yapıştır..."></textarea>
+        </div>
+        <div id="lnd-panel-url" style="display:none">
+          <div class="lnd-url-row">
+            <input id="lnd-url" placeholder="https://..." />
+            <button class="lnd-fetch-btn" onclick="lndFetchUrl()">Çek</button>
+          </div>
+          <div class="lnd-pdf-info" id="lnd-url-info" style="margin-top:8px"></div>
+        </div>
+        <div id="lnd-panel-pdf" style="display:none">
+          <div class="lnd-pdf-zone" onclick="document.getElementById('lnd-pdf-file').click()">
+            <div class="lnd-pdf-icon">📄</div>
+            <div class="lnd-pdf-name">PDF Yükle</div>
+            <div class="lnd-pdf-info">Tıkla veya sürükle bırak — PDF incelenir, temizlenir, bölümlere ayrılır ve kütüphaneye eklenir</div>
+          </div>
+          <input type="file" id="lnd-pdf-file" accept=".pdf,application/pdf" style="display:none" onchange="if(this.files[0])openPdfImport(this.files[0]);this.value=''"/>
+        </div>
+        <button class="lnd-start-btn" onclick="landingStart()">▶ Okumaya Başla</button>
+      </div>
+    </div>
+
+    <!-- KÜTÜPHANE -->
+    <div class="lnd-sec" id="lnd-lib-sec">
+      <div class="lnd-collapsible-hdr" style="cursor:default">
+        <div class="lnd-sec-title">Kütüphane</div>
+        <div style="display:flex;gap:6px">
+          <button class="lib-tool-btn" onclick="openAddBookModal('pdf')">+ Kitap Ekle</button>
+          <button class="lib-tool-btn" onclick="hideLanding();toggleLibraryPanel(true)">Tümünü Gör</button>
+        </div>
+      </div>
+      <div class="lnd-lib-grid" id="lnd-lib-grid" style="margin-top:14px"></div>
+    </div>
+
+    <!-- ÜCRETSİZ KİTAPLAR -->
+    <div class="lnd-sec" id="lnd-kat-sec">
+      <div class="lnd-collapsible-hdr" style="cursor:default">
+        <div class="lnd-sec-title">📚 Ücretsiz Kitaplar <span id="lnd-kat-count"></span></div>
+        <button class="lib-tool-btn" onclick="openKatalog()">Tümünü Gör</button>
+      </div>
+      <div class="chip-row" id="lnd-kat-chips" style="margin:12px 0 16px"></div>
+      <div class="lnd-lib-grid kat-vitrin" id="lnd-kat-grid"></div>
+    </div>
+
+    <!-- TEMA -->
+    <div class="lnd-sec">
+      <div class="lnd-collapsible-hdr" onclick="toggleLndSec('theme')">
+        <div class="lnd-sec-title">Tema</div>
+        <span class="lnd-caret" id="lnd-caret-theme">›</span>
+      </div>
+      <div class="lnd-collapsible-body" id="lnd-sec-theme" style="display:none">
+        <div class="lnd-theme-strip" id="lnd-theme-strip"></div>
+      </div>
+    </div>
+
+    <!-- ÖNERİ -->
+    <div class="lnd-sec">
+      <div class="lnd-sec-title">Öneri & Geri Bildirim</div>
+      <div class="lnd-suggest-card">
+        <p class="lnd-suggest-desc">Uygulama hakkındaki öneri ve geri bildirimlerini buraya yazabilirsin.</p>
+        <textarea class="lnd-suggest-textarea" id="lnd-suggest-txt" placeholder="Fikrin, önerin veya hata bildirimin..."></textarea>
+        <div class="lnd-suggest-row">
+          <button class="lnd-suggest-btn" onclick="submitSuggestion()">Gönder</button>
+          <span class="lnd-suggest-thanks" id="lnd-suggest-thanks">Teşekkürler! Önerin kaydedildi.</span>
+        </div>
+        <p class="lnd-suggest-note">Öneriler şimdilik bu cihazda saklanır.</p>
+      </div>
+    </div>
+
+    <!-- HAKKINDA -->
+    <div class="lnd-about">
+      <div class="lnd-about-grid">
+        <div class="lnd-about-col">
+          <h4>HızlıKitapOku Nedir?</h4>
+          <p>Kitapları RSVP, Bionic, Harf Harf gibi hızlı okuma teknikleriyle, her gün küçük oturumlarla okumanı sağlayan ücretsiz ve açık kaynak uygulama. Hesap yok, reklam yok; kitapların sadece senin cihazında kalır.</p>
+        </div>
+        <div class="lnd-about-col">
+          <h4>Okuma Modları</h4>
+          <p>
+            <span class="lnd-about-tag">RSVP</span><span class="lnd-about-tag">Harf Harf</span><span class="lnd-about-tag">Bionic</span><span class="lnd-about-tag">Scroll</span><span class="lnd-about-tag">Kartlar</span><span class="lnd-about-tag">Normal</span>
+          </p>
+        </div>
+        <div class="lnd-about-col">
+          <h4>Özellikler</h4>
+          <p>Günlük hedef ve seri, okuma zamanlayıcısı, akıllı PDF temizleme, içindekiler ve günlük parçalar, kaldığın yerden devam, 9 tema, 5 yazı tipi, odak modu, yedekleme.</p>
+        </div>
+      </div>
+    </div>
+    <div class="lnd-footer">HızlıKitapOku · Ücretsiz ve açık kaynak hızlı okuma uygulaması · <a href="https://github.com/turkerkirgin/hizlikitapoku" target="_blank" rel="noopener">GitHub</a> · <a href="gizlilik.html">Gizlilik</a> · <a href="kitaplar.html">Ücretsiz kitaplar</a><br> Kısayollar: <span class="kbd">Space</span> duraklat · <span class="kbd">←</span><span class="kbd">→</span> atla · <span class="kbd">+</span><span class="kbd">−</span> hız · <span class="kbd">B</span> bölümler · <span class="kbd">[</span><span class="kbd">]</span> bölüm geç · <span class="kbd">F</span> odak</div>
+  </div>
+</div>
+
+<!-- AMBİYANS ARKAPLAN -->
+<div id="ambient-bg">
+  <div class="amb-blob" id="amb1"></div>
+  <div class="amb-blob" id="amb2"></div>
+  <div class="amb-blob" id="amb3"></div>
+  <div class="amb-blob" id="amb4"></div>
+</div>
+
+<!-- ODAK MODU KONTROLLER -->
+<div id="focus-controls">
+  <button class="focus-btn" onclick="toggleToc()">📑</button>
+  <button class="focus-btn" onclick="toggleSettings()">🎨</button>
+  <button class="focus-btn" onclick="toggleFocusMode()">✕ Odaktan Çık</button>
+</div>
+
+<!-- AYARLAR PANELİ -->
+<div id="settings-panel">
+  <div class="sp-title">
+    Ayarlar
+    <button class="sp-close" onclick="toggleSettings()">×</button>
+  </div>
+
+  <div class="sp-section">
+    <div class="sp-label">Günlük Okuma</div>
+    <div class="sp-toggle-row" style="margin-bottom:10px">
+      <span class="sp-toggle-lbl">Günlük hedef</span>
+      <span><input type="number" class="num-input" id="set-goal" min="1" max="600" onchange="setGoalMin(this.value)"> dk</span>
+    </div>
+    <div class="sp-toggle-row" style="margin-bottom:10px">
+      <span class="sp-toggle-lbl">Süre dolunca cümle sonunda dur</span>
+      <label class="sp-toggle"><input type="checkbox" id="set-stop" onchange="settings.stopAtGoal=this.checked;saveSettings()"><div class="sp-toggle-track"></div><div class="sp-toggle-thumb"></div></label>
+    </div>
+    <div class="sp-toggle-row">
+      <span class="sp-toggle-lbl">Bitiş sesi</span>
+      <label class="sp-toggle"><input type="checkbox" id="set-chime" onchange="settings.chime=this.checked;saveSettings()"><div class="sp-toggle-track"></div><div class="sp-toggle-thumb"></div></label>
+    </div>
+  </div>
+
+  <div class="sp-sep"></div>
+
+  <div class="sp-section">
+    <div class="sp-label">Tema</div>
+    <div class="theme-grid" id="theme-grid"></div>
+    <div class="sp-custom-toggle" onclick="toggleCustomColors()">
+      <span>Özel Renk</span>
+      <span class="sp-custom-arrow" id="custom-arrow">›</span>
+    </div>
+    <div id="custom-colors" style="display:none">
+      <div class="custom-color-row">
+        <div>
+          <label>Arka Plan</label>
+          <input type="color" id="custom-bg-input" value="#0f0f0f" oninput="applyCustomTheme()">
+        </div>
+        <div>
+          <label>Metin</label>
+          <input type="color" id="custom-text-input" value="#f0f0f0" oninput="applyCustomTheme()">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sp-sep"></div>
+
+  <div class="sp-section">
+    <div class="sp-label">Yazı Tipi</div>
+    <div class="font-list" id="font-list"></div>
+  </div>
+
+  <div class="sp-sep"></div>
+
+  <div class="sp-section" style="margin-bottom:0">
+    <div class="sp-toggle-row">
+      <span class="sp-toggle-lbl">Ambiyans</span>
+      <label class="sp-toggle">
+        <input type="checkbox" id="ambient-toggle" onchange="toggleAmbient(this.checked)">
+        <div class="sp-toggle-track"></div>
+        <div class="sp-toggle-thumb"></div>
+      </label>
+    </div>
+    <div style="font-size:10px;color:var(--text3);margin-top:5px">Arka planda hareketli renk geçişleri</div>
+  </div>
+</div>
+
+<div id="topbar">
+  <button class="icon-btn" id="sb-toggle" data-sb onclick="document.body.classList.toggle('sb-open')" title="Panel">☰</button>
+  <div class="logo">hızlıkitap<span>oku</span></div>
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="rsvp" onclick="setMode('rsvp')">RSVP</button>
+    <button class="mode-tab" data-mode="typewriter" onclick="setMode('typewriter')">Harf Harf</button>
+    <button class="mode-tab" data-mode="bionic" onclick="setMode('bionic')">Bionic</button>
+    <button class="mode-tab" data-mode="scroll" onclick="setMode('scroll')">Scroll</button>
+    <button class="mode-tab" data-mode="tiktok" onclick="setMode('tiktok')">Kartlar</button>
+    <button class="mode-tab" data-mode="normal" onclick="setMode('normal')">Normal</button>
+  </div>
+  <div class="top-right">
+    <button class="icon-btn" onclick="showLanding()" title="Ana Ekran">⌂<span class="lbl"> Ana Ekran</span></button>
+    <button class="icon-btn" onclick="toggleSettings()" title="Ayarlar">🎨<span class="lbl"> Ayarlar</span></button>
+    <button class="icon-btn" onclick="toggleFocusMode()" title="Tam Ekran Odak (F)">⛶<span class="lbl"> Odak</span></button>
+    <button class="icon-btn" id="lib-toggle-btn" onclick="toggleLibraryPanel()" title="Kütüphane">📚<span class="lbl"> Kütüphane</span></button>
+  </div>
+</div>
+
+<div id="main">
+  <div id="sidebar">
+
+    <div class="mini-today" title="Bugünkü okuma">
+      <svg class="ring" viewBox="0 0 24 24" style="width:34px;height:34px"><circle class="ring-bg" cx="12" cy="12" r="9.5"/><circle class="ring-fg" id="sb-ring" cx="12" cy="12" r="9.5" stroke-dasharray="59.69" stroke-dashoffset="59.69"/></svg>
+      <div class="mt-txt"><b id="sb-today">0 / 15 dk</b><br><span id="sb-streak">🔥 0 gün seri</span></div>
+    </div>
+
+    <div class="cur-book" id="cur-book">
+      <div class="cbk-row"><div class="cbk-t" id="cbk-title"></div><button class="cbk-x" title="Kitabı kapat" onclick="closeCurrentBook()">×</button></div>
+      <div class="cbk-s" id="cbk-sub"></div>
+    </div>
+
+    <div id="source-panel">
+      <div class="sec-label">Kaynak</div>
+      <div class="src-tabs">
+        <button class="src-tab active" onclick="setSrc('text')">Metin</button>
+        <button class="src-tab" onclick="setSrc('url')">URL</button>
+        <button class="src-tab" onclick="setSrc('pdf')">PDF</button>
+      </div>
+      <div id="src-text" class="src-panel active">
+        <textarea id="text-input" placeholder="Metni buraya yapıştır..."></textarea>
+      </div>
+      <div id="src-url" class="src-panel">
+        <input class="txt-input" id="url-input" placeholder="https://..." style="margin-bottom:8px"/>
+        <button class="btn-secondary" onclick="fetchUrl()">Metni Çek</button>
+        <div id="url-info" style="font-size:11px;color:var(--text3);margin-top:6px"></div>
+      </div>
+      <div id="src-pdf" class="src-panel">
+        <div class="upload-zone" onclick="document.getElementById('pdf-file').click()">
+          <strong>PDF Yükle</strong>
+          <p>İncelenir, temizlenir ve kütüphaneye eklenir</p>
+        </div>
+        <input type="file" id="pdf-file" accept=".pdf,application/pdf" style="display:none" onchange="if(this.files[0])openPdfImport(this.files[0]);this.value=''"/>
+      </div>
+      <div class="sb-save-row" id="sb-save-row">
+        <input class="txt-input" id="lib-title-input" placeholder="Kitap Adı — Yazar"/>
+        <button onclick="saveToLibrary()" title="Bu metni kütüphaneye kaydet">💾</button>
+      </div>
+    </div>
+
+    <div class="sep"></div>
+
+    <div>
+      <div class="sec-label">Hız</div>
+      <div class="ctrl-row"><label>Kelime / dakika</label><span id="wpm-lbl">300</span></div>
+      <input type="range" min="50" max="1000" step="25" value="300" id="wpm-sl" oninput="onWpmChange(this.value)"/>
+    </div>
+
+    <div>
+      <div class="sec-label">Yazı Boyutu</div>
+      <div class="ctrl-row"><label>Boyut</label><span id="fs-lbl">32px</span></div>
+      <input type="range" min="14" max="72" step="2" value="32" id="fs-sl" oninput="onFsChange(this.value)"/>
+    </div>
+
+    <div class="sep"></div>
+
+    <button class="btn-primary" id="start-btn" onclick="startReading()">▶  Okumaya Başla</button>
+    <button class="btn-secondary" id="sidebar-pause-btn" onclick="togglePause()" style="display:none">⏸  Duraklat</button>
+    <button class="btn-secondary" onclick="resetReading(true)">⏹  Durdur</button>
+
+    <div class="sep"></div>
+
+    <div>
+      <div class="sec-label">Bu Oturum</div>
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-val" id="st-time">—</div><div class="stat-lbl">süre</div></div>
+        <div class="stat-card"><div class="stat-val" id="st-words">—</div><div class="stat-lbl">kelime</div></div>
+        <div class="stat-card"><div class="stat-val" id="st-wpm">—</div><div class="stat-lbl">k/dk</div></div>
+      </div>
+    </div>
+
+  </div><!-- /sidebar -->
+
+  <div id="reader">
+    <div id="progress-bar"></div>
+    <div id="mode-badge">
+      <span id="mode-name">RSVP Modu</span>
+      <span class="shortcut-hint"><span class="kbd">Space</span> duraklat &nbsp; <span class="kbd">←</span><span class="kbd">→</span> atla &nbsp; <span class="kbd">+</span><span class="kbd">−</span> hız</span>
+      <div class="mb-right">
+        <span id="sec-name"></span>
+        <button class="badge-btn" id="toc-btn" onclick="toggleToc()" style="display:none">📑 Bölümler</button>
+        <button class="badge-btn" id="peek-btn" onclick="setPeek(!document.getElementById('page-peek').classList.contains('visible'))" style="display:none" title="Gerçek kitapta neredesin">📍 Sayfa</button>
+        <button id="timer-pill" onclick="toggleTimerPop(event)" title="Zamanlayıcı">
+          <svg class="ring" viewBox="0 0 24 24"><circle class="ring-bg" cx="12" cy="12" r="9.5"/><circle class="ring-fg" id="timer-ring" cx="12" cy="12" r="9.5" stroke-dasharray="59.69" stroke-dashoffset="59.69"/></svg>
+          <span id="timer-txt">15:00</span><span class="tp-lbl" id="timer-lbl">kaldı</span>
+        </button>
+        <div id="page-badge"><span class="pb-icon">📄</span><span id="pb-cur">1</span>/<span id="pb-tot">1</span>&nbsp;<span id="pb-unit">sayfa</span></div>
+      </div>
+    </div>
+    <div id="reader-row">
+    <div id="reader-area">
+
+      <div id="idle">
+        <div class="icon">📖</div>
+        <p>Metin yapıştır, URL gir, PDF yükle ya da kütüphaneden bir kitap seç — ardından okumaya başla.</p>
+      </div>
+
+      <!-- RSVP -->
+      <div id="rsvp">
+        <div class="rsvp-guide"><div class="rg-line rg-top"></div><div id="rsvp-word">—</div><div class="rg-line rg-bot"></div></div>
+        <div id="rsvp-ctx"></div>
+        <div class="pp-row">
+          <button class="skip-btn" onclick="skipWords(-10)">−10</button>
+          <div class="pp-btn" id="pp-btn" onclick="togglePause()">⏸</div>
+          <button class="skip-btn" onclick="skipWords(10)">+10</button>
+          <span class="count-lbl" id="rsvp-count">0 / 0</span>
+        </div>
+      </div>
+
+      <!-- HARF HARF -->
+      <div id="typewriter">
+        <div id="tw-text"><span id="tw-typed"></span><span class="cursor"></span></div>
+        <div style="display:flex;justify-content:center;margin-top:16px">
+          <div class="pp-btn" id="tw-pp-btn" onclick="togglePause()">⏸</div>
+        </div>
+        <div class="page-note" id="tw-note"></div>
+      </div>
+
+      <!-- BIONIC -->
+      <div id="bionic">
+        <div id="bio-text"></div>
+        <div style="display:flex;justify-content:center;margin-top:16px">
+          <div class="pp-btn" id="bio-pp-btn" onclick="togglePause()">⏸</div>
+        </div>
+        <div class="page-note" id="bio-note"></div>
+      </div>
+
+      <!-- SCROLL -->
+      <div id="scroll-outer" style="display:none;flex-direction:column;align-items:center;gap:14px;width:100%;max-width:640px">
+        <div id="scroll">
+          <div class="scroll-fade-top"></div>
+          <div class="scroll-center-line"></div>
+          <div id="scroll-inner"></div>
+          <div class="scroll-fade-bot"></div>
+        </div>
+        <div class="pp-row">
+          <button class="skip-btn" onclick="skipWords(-1)">↑</button>
+          <div class="pp-btn" id="scroll-pp-btn" onclick="togglePause()">⏸</div>
+          <button class="skip-btn" onclick="skipWords(1)">↓</button>
+          <span class="count-lbl" id="scroll-count">0 / 0</span>
+        </div>
+      </div>
+
+      <!-- KARTLAR -->
+      <div id="tiktok">
+        <div class="tt-swipe-hint">Kaydır veya düğmelere bas</div>
+        <div id="tt-slide-wrap"></div>
+        <div class="tt-dots" id="tt-dots"></div>
+        <div class="pp-row">
+          <button class="skip-btn" onclick="skipWords(-1)">−1</button>
+          <div class="pp-btn" id="tt-pp-btn" onclick="togglePause()">⏸</div>
+          <button class="skip-btn" onclick="skipWords(1)">+1</button>
+          <span class="count-lbl" id="tt-count">0 / 0</span>
+        </div>
+      </div>
+
+      <!-- NORMAL OKUMA -->
+      <div id="normal">
+        <div id="normal-meta">
+          <span id="normal-wc"></span>
+          <span id="normal-rt"></span>
+        </div>
+        <div id="normal-text"></div>
+        <div class="normal-eof"></div>
+      </div>
+
+      <!-- BÖLÜM KARTI -->
+      <div id="chapter-card">
+        <div class="ch-label" id="ch-label">Yeni Bölüm</div>
+        <div class="ch-title" id="ch-title-text"></div>
+        <div class="ch-line"></div>
+        <div class="ch-words" id="ch-word-pos"></div>
+        <div class="ch-continue" id="ch-continue">
+          <span class="ch-continue-key">Space</span> veya tıkla — devam et
+        </div>
+      </div>
+
+      <button id="float-pause" onclick="togglePause()">⏸</button>
+
+      <div id="done-overlay">
+        <div class="done-icon">✅</div>
+        <div class="done-title" id="done-title">Tamamlandı!</div>
+        <div class="done-stats" id="done-stats"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+          <button class="btn-primary" style="width:auto;padding:10px 24px;margin-top:8px" onclick="restartFromBeginning()">↺ Baştan Oku</button>
+          <button class="btn-secondary" style="width:auto;padding:10px 24px;margin-top:8px" onclick="showLanding()">⌂ Ana Ekran</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SAYFA PANELİ -->
+    <aside id="page-peek">
+      <div class="pk-head"><span>📍 Kitaptaki yerin</span><button class="sp-close" onclick="setPeek(false)" title="Paneli gizle">×</button></div>
+      <div class="pk-sec" id="pk-sec"></div>
+      <div id="pk-pdf" class="pk-page" title="Bir satıra tıkla → oradan oku"><canvas id="pk-canvas"></canvas><div id="pk-read"></div><div id="pk-hl"></div></div>
+      <div id="pk-virtual" class="pk-page pk-virtual" title="Bir kelimeye tıkla → oradan oku"></div>
+      <div class="pk-foot"><span id="pk-page-lbl"></span><span id="pk-pct"></span></div>
+      <div class="pk-bar"><i id="pk-bar"></i></div>
+      <div id="pk-attach" class="pk-note" style="display:none"><span id="pk-attach-txt"></span><br><button class="chip" style="margin-top:8px" onclick="pickPdfFor()">📄 PDF'i bağla</button></div>
+      <div class="pk-hint">Sayfada bir yere tıkla → oraya atla</div>
+    </aside>
+    </div>
+  </div>
+</div>
+<input type="file" id="pk-attach-file" accept=".pdf,application/pdf" style="display:none" onchange="attachPdfToBook(this)">
+
+<!-- MOBİL / TABLET ALT ÇUBUK -->
+<div id="mobile-bar">
+  <button data-sb onclick="document.body.classList.toggle('sb-open')">☰<span>Panel</span></button>
+  <button onclick="skipWords(-10)">⏪<span>Geri</span></button>
+  <button id="mb-play" class="mb-play" onclick="togglePause()">▶</button>
+  <button onclick="skipWords(10)">⏩<span>İleri</span></button>
+  <button data-toc onclick="toggleToc()">📑<span>Bölüm</span></button>
+  <button data-peek onclick="togglePeekSheet()">📍<span>Sayfa</span></button>
+</div>
+
+<!-- ZAMANLAYICI PENCERESİ -->
+<div id="timer-pop">
+  <div class="tpop-sec">
+    <div class="tpop-title">⏱ Zamanlayıcı</div>
+    <div class="tpop-desc" id="tpop-desc">Varsayılan: bugünkü hedefe kalan süre geri sayılır. Sadece gerçekten okuduğun (duraklatılmamış) süre sayılır.</div>
+  </div>
+  <div class="tpop-sec">
+    <div class="tpop-lbl">Bu oturum için</div>
+    <div class="chip-row" id="tpop-chips"></div>
+  </div>
+  <div class="tpop-sec">
+    <div class="tpop-lbl">Özel süre</div>
+    <span><input type="number" class="num-input" id="tpop-custom" min="1" max="600" placeholder="dk"> <button class="chip" onclick="setTimerCustom(document.getElementById('tpop-custom').value)">Başlat</button></span>
+  </div>
+  <div class="tpop-sec">
+    <div class="tpop-lbl">Bugün</div>
+    <div style="font-size:12px;color:var(--text2);line-height:1.7" id="tpop-today"></div>
+  </div>
+</div>
+
+<!-- HEDEF TAMAM -->
+<div id="goal-overlay">
+  <div class="goal-card">
+    <div class="goal-emoji" id="goal-emoji">🎉</div>
+    <div class="goal-title" id="goal-title">Bugünkü hedef tamam!</div>
+    <div class="goal-sub" id="goal-sub"></div>
+    <div class="goal-stats" id="goal-stats"></div>
+    <div class="goal-btns">
+      <button class="btn-primary" onclick="goalContinue()">▶ Okumaya devam et</button>
+      <button class="btn-secondary" onclick="goalFinish()">Bugünlük bu kadar</button>
+    </div>
+  </div>
+</div>
+
+<!-- BÖLÜMLER ÇEKMECESİ -->
+<div id="toc-drawer">
+  <div class="toc-head"><b>📑 Bölümler</b><button class="sp-close" onclick="toggleToc(false)">×</button></div>
+  <div class="toc-sub" id="toc-sub"></div>
+  <div style="padding:0 18px 12px"><div class="seg" id="toc-seg"><button data-split="chapters" onclick="setSplit('chapters')">Kitap bölümleri</button><button data-split="parts" onclick="setSplit('parts')">Günlük parçalar</button></div></div>
+  <div class="toc-list" id="toc-list"></div>
+</div>
+
+<!-- LIBRARY OVERLAY -->
+<div id="lib-overlay">
+  <div class="lib-header">
+    <div class="lib-header-logo">hızlıkitap<span>oku</span></div>
+    <div class="lib-filter-tabs">
+      <button class="lib-filter-tab active" data-f="all" onclick="setLibFilter('all')">Tümü</button>
+      <button class="lib-filter-tab" data-f="reading" onclick="setLibFilter('reading')">Okunuyor</button>
+      <button class="lib-filter-tab" data-f="finished" onclick="setLibFilter('finished')">Bitenler</button>
+      <button class="lib-filter-tab" data-f="wishlist" onclick="setLibFilter('wishlist')">İstek Listesi</button>
+      <button class="lib-filter-tab" data-f="favorite" onclick="setLibFilter('favorite')">Favoriler</button>
+    </div>
+    <div class="lib-tools" style="margin-left:auto">
+      <button class="lib-tool-btn" onclick="exportBackup()" title="Tüm kitapları, ilerlemeyi ve okuma geçmişini dosyaya kaydet">⤓ Yedek Al</button>
+      <button class="lib-tool-btn" onclick="document.getElementById('backup-file').click()" title="Yedek dosyasından geri yükle">⤒ Yedekten Yükle</button>
+      <input type="file" id="backup-file" accept=".json,application/json" style="display:none" onchange="importBackup(this)">
+    </div>
+    <button class="lib-tool-btn" onclick="openKatalog()">📚 Ücretsiz Kitaplar</button>
+    <button class="lib-add-btn" onclick="openAddBookModal('pdf')">+ Kitap Ekle</button>
+    <button class="lib-close-btn" style="margin-left:0" onclick="toggleLibraryPanel(false)">✕ Kapat</button>
+  </div>
+  <div class="lib-body">
+    <div class="lib-section-label" id="lib-storage-note">Kitaplığım</div>
+    <div class="lib-grid" id="lib-grid"></div>
+  </div>
+</div>
+
+<!-- ÜCRETSİZ KİTAPLAR KATALOĞU -->
+<div id="kat-overlay">
+  <div class="lib-header">
+    <div class="lib-header-logo">📚 Ücretsiz Kitaplar</div>
+    <input class="txt-input kat-search" id="kat-q" placeholder="Kitap veya yazar ara..." autocomplete="off">
+    <span class="kat-count" id="kat-count"></span>
+    <button class="lib-close-btn" onclick="closeKatalog()">✕ Kapat</button>
+  </div>
+  <div class="lib-body">
+    <div class="kat-note">Buradaki kitapların hepsi <b>telifi düşmüş (kamu malı)</b> eserlerdir. Metinler <a href="https://tr.wikisource.org" target="_blank" rel="noopener">Vikikaynak</a> ve <a href="https://www.gutenberg.org" target="_blank" rel="noopener">Project Gutenberg</a> kaynaklıdır. Bir kitabı ekleyince cihazına iner ve internetsiz okunur. Kendi kitabını eklemek için <a href="#" onclick="closeKatalog();openAddBookModal('pdf');return false">PDF yükleyebilirsin</a>.</div>
+    <div class="chip-row" id="kat-tur-chips" style="margin-bottom:8px"></div>
+    <div class="chip-row" id="kat-dil-chips" style="margin-bottom:22px"></div>
+    <div class="lib-grid" id="kat-grid"></div>
+  </div>
+</div>
+<div id="kat-modal">
+  <div class="abm-panel kat-panel">
+    <div class="abm-header"><div class="abm-title">📖 Kitap</div><button class="abm-close" onclick="closeKatDetail()">✕</button></div>
+    <div class="abm-body">
+      <div class="kat-d-wrap">
+        <div id="kat-d-cover"></div>
+        <div class="kat-d-info">
+          <div class="bd-title" id="kat-d-title"></div>
+          <div class="bd-author" id="kat-d-author" style="margin-bottom:12px"></div>
+          <p class="kat-d-desc" id="kat-d-desc"></p>
+          <div class="bd-stats-row" id="kat-d-stats"></div>
+          <div class="kat-d-src" id="kat-d-src"></div>
+          <div class="pa-actions" style="margin-top:16px">
+            <button class="btn-secondary" id="kat-d-add" onclick="katEkle(katDetailId,false)">+ Kütüphaneye Ekle</button>
+            <button class="btn-primary" id="kat-d-read" onclick="katEkle(katDetailId,true)">▶ Ekle ve Oku</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BOOK DETAIL OVERLAY -->
+<div id="book-detail">
+  <div class="bd-header">
+    <button class="bd-back-btn" onclick="closeBookDetail()">← Geri</button>
+  </div>
+  <div class="bd-body">
+    <div class="bd-cover-col">
+      <div class="bd-cover" id="bd-cover"></div>
+      <input type="file" id="bd-cover-file" accept="image/*" style="display:none" onchange="setCoverFromFile(this)">
+      <div class="bd-cover-upload">
+        <button class="bd-cover-upload-btn" onclick="document.getElementById('bd-cover-file').click()">📷 Kapak Fotoğrafı Ekle</button>
+        <button class="bd-cover-upload-btn" onclick="refetchCover()">🔎 Kapağı İnternetten Bul</button>
+        <button class="bd-cover-remove-btn" id="bd-cover-remove-btn" style="display:none" onclick="removeCoverFromDetail()">✕ Kapağı Kaldır</button>
+      </div>
+    </div>
+    <div class="bd-info-col">
+      <div class="bd-title" id="bd-title"></div>
+      <div class="bd-author" id="bd-author"></div>
+      <div class="bd-source" id="bd-source"></div>
+      <div class="bd-stats-row">
+        <div class="bd-stat"><div class="bd-stat-val" id="bd-words">—</div><div class="bd-stat-lbl">kelime</div></div>
+        <div class="bd-stat"><div class="bd-stat-val" id="bd-time">—</div><div class="bd-stat-lbl">tahmini süre</div></div>
+        <div class="bd-stat"><div class="bd-stat-val" id="bd-pages">—</div><div class="bd-stat-lbl" id="bd-pages-lbl">~sayfa</div></div>
+        <div class="bd-stat"><div class="bd-stat-val" id="bd-sessions">—</div><div class="bd-stat-lbl" id="bd-sessions-lbl">günlük oturum</div></div>
+        <div class="bd-stat"><div class="bd-stat-val" id="bd-chcount">—</div><div class="bd-stat-lbl">bölüm</div></div>
+      </div>
+      <div class="bd-progress-section">
+        <div class="bd-progress-label"><span id="bd-progress-txt">Okuma İlerlemesi</span><span id="bd-pct">%0</span></div>
+        <div class="bd-progress-bar"><div class="bd-progress-fill" id="bd-progress-fill"></div></div>
+      </div>
+      <div class="bd-plan" id="bd-plan"></div>
+      <div class="bd-actions">
+        <button class="bd-btn-primary" id="bd-start-btn" onclick="startBookFromDetail()">▶ Okumaya Başla</button>
+        <button class="bd-btn-secondary" id="bd-restart-btn" onclick="startBookFromDetail(0)">↺ Baştan Başla</button>
+        <button class="bd-btn-secondary" id="bd-wishlist-btn" onclick="toggleWishlistFromDetail()">♡ İstek Listesine Ekle</button>
+        <button class="bd-btn-secondary" id="bd-fav-btn" onclick="toggleFavFromDetail()">☆ Favorilere Ekle</button>
+        <button class="bd-btn-secondary" id="bd-finish-btn" onclick="toggleFinishedFromDetail()">✓ Bitti Olarak İşaretle</button>
+        <button class="bd-btn-secondary" id="bd-attach-btn" onclick="pickPdfFor(detailBookId)">📄 PDF'ini Bağla (gerçek sayfa görünümü)</button>
+        <button class="bd-btn-secondary" onclick="renameBookFromDetail()">✎ Adını Değiştir</button>
+        <button class="bd-btn-danger" onclick="deleteBookFromDetail()">✕ Kitabı Sil</button>
+      </div>
+      <div class="bd-sec-label">Okuma Modu</div>
+      <div class="bd-mode-tabs">
+        <button class="bd-mode-tab active" data-mode="rsvp" onclick="setBdMode('rsvp')">RSVP</button>
+        <button class="bd-mode-tab" data-mode="typewriter" onclick="setBdMode('typewriter')">Harf Harf</button>
+        <button class="bd-mode-tab" data-mode="bionic" onclick="setBdMode('bionic')">Bionic</button>
+        <button class="bd-mode-tab" data-mode="scroll" onclick="setBdMode('scroll')">Scroll</button>
+        <button class="bd-mode-tab" data-mode="tiktok" onclick="setBdMode('tiktok')">Kartlar</button>
+        <button class="bd-mode-tab" data-mode="normal" onclick="setBdMode('normal')">Normal</button>
+      </div>
+      <div class="bd-toc-wrap">
+        <div class="bd-sec-label">İçindekiler</div>
+        <div class="bd-toc-tools">
+          <div class="seg" id="bd-seg"><button data-split="chapters" onclick="setSplit('chapters',true)">Kitap bölümleri</button><button data-split="parts" onclick="setSplit('parts',true)">Günlük parçalar</button></div>
+          <button class="bd-link-btn" onclick="redetectChapters()">Bölümleri yeniden algıla</button>
+        </div>
+        <div class="bd-toc-list" id="bd-toc-list"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- KİTAP EKLE MODAL -->
+<div id="add-book-modal">
+  <div class="abm-panel">
+    <div class="abm-header">
+      <div class="abm-title">📚 Kitap Ekle</div>
+      <button class="abm-close" onclick="closeAddBookModal()">✕</button>
+    </div>
+    <div class="abm-tabs">
+      <button class="abm-tab active" data-tab="pdf" onclick="setAbmTab('pdf')">📄 PDF <span class="abm-tab-badge">akıllı</span></button>
+      <button class="abm-tab" data-tab="manual" onclick="setAbmTab('manual')">✏️ Metin</button>
+      <button class="abm-tab" data-tab="gdrive" onclick="setAbmTab('gdrive')">☁️ Google Drive</button>
+    </div>
+    <div class="abm-body">
+
+      <!-- PDF -->
+      <div class="abm-pane active" id="abm-pdf">
+        <div id="pa-start">
+          <div class="pdf-drop" id="pdf-drop" onclick="document.getElementById('abm-pdf-file').click()">
+            <div class="pd-ico">📄</div>
+            <b>PDF seç veya buraya sürükle</b>
+            <p>Her sayfa incelenir: sayfa numaraları, üst/alt bilgiler ve heceleme tireleri temizlenir,<br>paragraflar yeniden kurulur, bölümler (içindekiler / başlıklar) bulunur.</p>
+          </div>
+          <input type="file" id="abm-pdf-file" accept=".pdf,application/pdf" style="display:none" onchange="if(this.files[0])analyzePdfFile(this.files[0]);this.value=''">
+          <div class="pa-progress" id="pa-progress"><div class="pp-lbl" id="pa-prog-lbl">Hazırlanıyor...</div><div class="pp-bar"><i id="pa-prog-bar"></i></div></div>
+        </div>
+        <div id="pa-report"></div>
+      </div>
+
+      <!-- METİN -->
+      <div class="abm-pane" id="abm-manual">
+        <div style="margin-bottom:14px">
+          <div class="abm-field-label">Kitap Adı</div>
+          <input class="txt-input" id="abm-title" placeholder="Kitap Adı — Yazar Adı">
+        </div>
+        <div class="abm-field-label">Metin <span style="text-transform:none;letter-spacing:0;font-weight:400">(.txt dosyasını buraya sürükleyebilirsin)</span></div>
+        <textarea id="abm-text" style="height:220px;width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px;color:var(--text);font-size:12px;font-family:var(--font);resize:vertical;outline:none;line-height:1.5" placeholder="Kitap metnini buraya yapıştır..."></textarea>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button class="btn-primary" onclick="abmAddManual(false)">+ Kütüphaneye Ekle</button>
+          <button class="btn-secondary" onclick="abmAddManual(true)" style="width:auto;padding:8px 16px">▶ Ekle ve Oku</button>
+        </div>
+        <div id="abm-status" class="abm-status"></div>
+      </div>
+
+      <!-- GOOGLE DRIVE -->
+      <div class="abm-pane" id="abm-gdrive">
+        <div class="gd-setup-box">
+          <div class="gd-setup-title">Google Drive Bağlantısı</div>
+          <div class="gd-hint">
+            1. <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console</a>'a git → Proje oluştur → Drive API'yi etkinleştir → API Key oluştur<br>
+            2. Google Drive'da klasörünü aç → Paylaş → "Bağlantısı olan herkes" → Görüntüleyici<br>
+            3. Klasörün URL'sini buraya yapıştır (klasör ID otomatik çekilir). PDF'ler de akıllı temizlemeden geçer.
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <input class="txt-input" id="gd-apikey" placeholder="Google API Key (AIza...)">
+            <div class="gd-input-row">
+              <input class="txt-input" id="gd-folder" placeholder="Google Drive klasör URL veya ID...">
+              <button class="gd-connect-btn" onclick="gdListFiles()">🔍 Listele</button>
+            </div>
+          </div>
+        </div>
+        <div id="gd-status" class="gd-status"></div>
+        <div id="gd-file-list" class="gd-file-list"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+<div id="drop-hint">📄 PDF veya TXT dosyasını bırak</div>
+
+%%NUTUK_TAG%%
+<script>
+%%APPJS%%
+</script>
+%%SW%%
+</body>
+</html>

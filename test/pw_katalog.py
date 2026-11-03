@@ -1,0 +1,35 @@
+import time
+from playwright.sync_api import sync_playwright
+errs=[]
+with sync_playwright() as p:
+    b=p.chromium.launch(channel='chrome')
+    for ad,w,h,touch in [('masaustu',1440,900,False),('telefon',390,844,True)]:
+        ctx=b.new_context(viewport={'width':w,'height':h},has_touch=touch,is_mobile=touch,device_scale_factor=2 if touch else 1)
+        pg=ctx.new_page()
+        pg.on('pageerror',lambda e,ad=ad:errs.append(ad+' PAGEERR '+str(e)))
+        pg.on('console',lambda m,ad=ad:errs.append(ad+' CONSOLE '+m.text) if m.type=='error' and '404' not in m.text else None)
+        pg.goto('http://127.0.0.1:8811/'); pg.wait_for_function('libraryReady===true',timeout=30000)
+        pg.wait_for_function("document.querySelectorAll('#lnd-kat-grid .kat-card').length>0",timeout=15000)
+        print(ad,'vitrin kartı:',pg.evaluate("document.querySelectorAll('#lnd-kat-grid .kat-card').length"))
+        pg.evaluate("document.getElementById('lnd-kat-sec').scrollIntoView()"); time.sleep(.4)
+        pg.screenshot(path=f'test/shots/kat-{ad}-1-vitrin.png')
+        pg.evaluate('openKatalog()'); pg.wait_for_function("document.querySelectorAll('#kat-grid .kat-card').length>50")
+        print(ad,'katalog:',pg.evaluate("document.querySelectorAll('#kat-grid .kat-card').length"))
+        pg.screenshot(path=f'test/shots/kat-{ad}-2-katalog.png')
+        pg.click('#kat-tur-chips [data-tur="Öykü"]'); time.sleep(.3)
+        print(ad,'öykü:',pg.evaluate("document.querySelectorAll('#kat-grid .kat-card').length"))
+        pg.click('#kat-tur-chips [data-tur="Tümü"]'); pg.fill('#kat-q','madonna'); time.sleep(.3)
+        print(ad,'arama madonna:',pg.evaluate("[...document.querySelectorAll('#kat-grid .lib-card-title')].map(e=>e.textContent)"))
+        pg.click('#kat-grid .kat-card'); pg.wait_for_selector('#kat-modal.visible'); time.sleep(.4)
+        pg.screenshot(path=f'test/shots/kat-{ad}-3-detay.png')
+        pg.click('#kat-d-read'); pg.wait_for_function('running===true',timeout=30000); time.sleep(2)
+        print(ad,'okuma:',pg.evaluate("[curBook.title,curBook.catalogId,words.length,sections.length,curBook.sourceName]"))
+        pg.screenshot(path=f'test/shots/kat-{ad}-4-okuma.png')
+        # Nutuk: büyük kitap + bölümler
+        pg.evaluate("resetReading();showKatDetail('nutuk-1927')"); pg.wait_for_selector('#kat-modal.visible')
+        pg.click('#kat-d-add'); pg.wait_for_function("library.some(b=>b.catalogId==='nutuk-1927')",timeout=60000); time.sleep(1)
+        print(ad,'nutuk:',pg.evaluate("(()=>{const b=library.find(b=>b.catalogId==='nutuk-1927');return [b.wordCount,b.chapters.length,b.chapters[0].title,b.chapters[10].title]})()"))
+        pg.screenshot(path=f'test/shots/kat-{ad}-5-nutuk-detay.png')
+        ctx.close()
+    b.close()
+print('\n'.join(errs) or 'HATA YOK')

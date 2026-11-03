@@ -1,0 +1,9 @@
+.onbellek/
+dist/
+__pycache__/
+*.pyc
+test/shots/
+araclar/katalog_log.txt
+# kişisel: yerleşik sadeleştirilmiş Nutuk metni (yayın hakkı belirsiz, sadece masaüstü sürüm için)
+src/nutuk.json
+.netlify/
